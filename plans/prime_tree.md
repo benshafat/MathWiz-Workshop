@@ -246,14 +246,14 @@ SymPy's `factorint` and `isprime` are sufficient for all backend computation. No
 
 ---
 
-## 7. Open Questions — Resolve Before Implementing
+## 7. Answered Questions:
 
-1. **Binary vs. flat tree representation** — The plan above always splits into (smallest prime, cofactor), giving a binary tree. An alternative is to represent 12 = 2² × 3 as a single root with three children [2, 2, 3] (flat/star layout). The binary approach produces more interesting visual depth; the flat approach is arguably more mathematically literal. Which form is preferred visually?
+1. **Binary vs. flat tree representation** — The plan above always splits into (smallest prime, cofactor), giving a binary tree. An alternative is to represent 12 = 2² × 3 as a single root with three children [2, 2, 3] (flat/star layout). The binary approach produces more interesting visual depth; the flat approach is arguably more mathematically literal. Which form is preferred visually? Answer: Binary.
 
-2. **Minimum n = 3 rule** — The spec says "provide a number," implying any positive integer. But n = 1 and n = 2 break the three-tree display (n−1 would be 1 or 0). Should these be silently rejected with an inline message, or should the UI disable the Compute button and show a "n must be ≥ 3" hint before the user submits?
+2. **Minimum n = 3 rule** — The spec says "provide a number," implying any positive integer. But n = 1 and n = 2 break the three-tree display (n−1 would be 1 or 0). Should these be silently rejected with an inline message, or should the UI disable the Compute button and show a "n must be ≥ 3" hint before the user submits? Anwer: UI solution
 
-3. **Tree depth cap for large inputs** — The plan proposes collapsing trees deeper than ~20 levels. Should collapsed subtrees be expandable on click (requires stateful rendering), or should they just display a static "..." node with a tooltip explaining why it's truncated?
+3. **Tree depth cap for large inputs** — The plan proposes collapsing trees deeper than ~20 levels. Should collapsed subtrees be expandable on click (requires stateful rendering), or should they just display a static "..." node with a tooltip explaining why it's truncated? Answer: tooltip is enough. keep things simple.
 
-4. **Column width for very wide trees** — Highly composite numbers (e.g., 720720 = 2⁴ × 3² × 5 × 7 × 11 × 13) produce wide trees at shallow depth. The fixed three-column layout may crowd these. Options: allow horizontal scrolling per column, or dynamically redistribute column widths based on the width of each tree. Which is preferred?
+4. **Column width for very wide trees** — Highly composite numbers (e.g., 720720 = 2⁴ × 3² × 5 × 7 × 11 × 13) produce wide trees at shallow depth. The fixed three-column layout may crowd these. Options: allow horizontal scrolling per column, or dynamically redistribute column widths based on the width of each tree. Which is preferred? Answer: whichever is simpler. probably the horizontal scrolling.
 
-5. **n input type** — Should the input accept only integers typed by the user, or also support expressions like `2^10` or `10!` (parsed on the frontend before sending to the backend)? Expression parsing is a modest JS complexity addition but would make the tool much more fun to explore.
+5. **n input type** — Should the input accept only integers typed by the user, or also support expressions like `2^10` or `10!` (parsed on the frontend before sending to the backend)? Expression parsing is a modest JS complexity addition but would make the tool much more fun to explore. Answer: sure, allow expression parsing.

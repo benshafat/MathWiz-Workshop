@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MathWiz Workshop</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0f172a; color: #f8fafc; font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+    nav { background: #1e293b; padding: 12px 20px; display: flex; gap: 10px; flex-wrap: wrap; border-bottom: 1px solid #334155; }
+    nav button { background: #334155; color: #94a3b8; border: 1px solid #475569; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.15s; }
+    nav button:hover { background: #475569; color: #f8fafc; }
+    nav button.active { background: #f97316; color: #fff; border-color: #f97316; }
+    #viz-container { padding: 20px; min-height: calc(100vh - 60px); }
+    #loading { display: none; color: #64748b; padding: 40px; text-align: center; font-size: 16px; }
+    #error-msg { display: none; color: #f87171; padding: 12px; background: #450a0a; border-radius: 6px; margin-bottom: 16px; }
+    .controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; padding: 12px 16px; background: #1e293b; border-radius: 8px; }
+    .controls label { color: #94a3b8; font-size: 13px; display: flex; gap: 8px; align-items: center; }
+    .controls input[type=range] { accent-color: #f97316; }
+    .controls input[type=number], .controls select { background: #334155; color: #f8fafc; border: 1px solid #475569; padding: 4px 8px; border-radius: 4px; font-size: 13px; }
+    .controls button { background: #f97316; color: #fff; border: none; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+    .controls button:hover { background: #ea6c00; }
+  </style>
+</head>
+<body>
+  <nav>
+    <button data-viz="primTree">Prime Trees</button>
+    <button data-viz="ulamSpiral">Ulam Spiral</button>
+    <button data-viz="collatz">Collatz</button>
+    <button data-viz="totient">Totient φ(n)</button>
+    <button data-viz="contFraction">Continued Fractions</button>
+    <button data-viz="recaman">Recamán</button>
+    <button data-viz="modularWeb">Modular Webs</button>
+  </nav>
+  <main>
+    <div id="error-msg"></div>
+    <div id="loading">Loading...</div>
+    <div id="viz-container"></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="api.js"></script>
+  <script src="views/primeTree.js"></script>
+  <script src="views/ulamSpiral.js"></script>
+  <script src="views/collatz.js"></script>
+  <script src="views/totient.js"></script>
+  <script src="views/contFraction.js"></script>
+  <script src="views/recaman.js"></script>
+  <script src="views/modularWeb.js"></script>
+  <script>
+    const container = document.getElementById('viz-container');
+    const loading = document.getElementById('loading');
+    const errorMsg = document.getElementById('error-msg');
+
+    // Map data-viz values to window.Views keys
+    const VIEW_MAP = {
+      primTree: 'primTree', ulamSpiral: 'ulamSpiral', collatz: 'collatz',
+      totient: 'totient', contFraction: 'contFraction', recaman: 'recaman',
+      modularWeb: 'modularWeb'
+    };
+
+    document.querySelectorAll('nav button').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        // Update active button
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const vizName = btn.dataset.viz;
+        container.innerHTML = '';
+        errorMsg.style.display = 'none';
+        loading.style.display = 'block';
+
+        try {
+          await window.Views[vizName].mount(container);
+        } catch (err) {
+          errorMsg.textContent = `Error: ${err.message || err}`;
+          errorMsg.style.display = 'block';
+        } finally {
+          loading.style.display = 'none';
+        }
+      });
+    });
+
+    // Auto-load first viz on page load
+    document.querySelector('nav button').click();
+  </script>
+</body>
+</html>
