@@ -158,6 +158,10 @@ Cap `depth` at 25 to avoid exponential blowup (the 2n branch always exists, so t
 - Clamp `depth` to [1, 20].
 - No SymPy or NumPy imports needed — pure Python suffices.
 
+#### Caching
+
+Cache key: `collatz:{n}:{k}:{mode}:{depth}`. Forward sequences are cheap, but the reverse tree at depth 20 can reach ~1M nodes and is expensive to rebuild. Cache all responses via `backend/cache.py`.
+
 #### Pydantic Models (recommended)
 
 Define response models in the router or a `schemas/collatz.py` file so FastAPI generates accurate OpenAPI docs:

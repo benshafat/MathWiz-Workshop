@@ -17,13 +17,15 @@ Two-part system: a Python/FastAPI backend that computes mathematical data and re
 | Package mgmt | uv | Project preference |
 | Math | SymPy | Primes, factorization, totient, continued fractions — batteries included |
 | Numerics | NumPy | Array operations for sequence generation |
+| Cache | sqlite3 (stdlib) | In-memory key-value response cache — no extra dependency |
 | Data models | Pydantic | Ships with FastAPI, validates response shapes |
 
 ### Directory Structure
 
 ```
 backend/
-├── main.py               # FastAPI app, CORS config, router registration
+├── main.py               # FastAPI app, CORS config, router registration, startup pre-warm
+├── cache.py              # In-memory SQLite3 key-value cache (get/set); shared by all routers
 ├── routers/
 │   ├── prime_tree.py     # /api/prime-tree
 │   ├── ulam_spiral.py    # /api/ulam-spiral

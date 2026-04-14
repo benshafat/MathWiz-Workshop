@@ -106,6 +106,12 @@ def compute_cf(sympy_expr, depth: int):
 
 **Important note on `continued_fraction_iterator`:** For irrational numbers, SymPy evaluates the expression symbolically where possible (quadratic surds get exact periodic CFs) and falls back to high-precision numerical evaluation otherwise. For transcendental constants like π, γ, ζ(3), and ln(2), SymPy uses its `mpmath` backend (which ships with SymPy). Depth up to 50 terms is reliably fast for all 10 presets.
 
+#### Caching and pre-warming
+
+Cache key: `cf:{number}:{depth}`. The total key space is finite (10 constants × 50 depths = 500 entries max), so the entire space can be pre-warmed on startup. In practice, pre-warm all 10 constants at the default depth (20) on app startup, so the first dropdown interaction is instant.
+
+To support pre-warming, expose `compute_cf(number_key: str, depth: int) -> dict` and `PRESETS: dict` as module-level names in `cont_fraction.py` so `main.py` can import and call them directly. Use `backend/cache.py` for get/set.
+
 ### JSON Response Shape
 
 ```json

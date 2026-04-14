@@ -146,6 +146,10 @@ def ulam_spiral(size: int = 10):
 
 **Payload size estimate:** At 249,001 points, a compact JSON payload is roughly 10-15 MB (each object ~45 chars). This is fine for a local dev server but worth being aware of. If it becomes slow, switch to a flat array encoding (see Open Questions).
 
+### Caching
+
+Cache key: `ulam:{size}`. The four tier sizes (10, 50, 150, 249) are pre-warmed on app startup, so the first user interaction always hits the cache. Extract the core computation into a standalone `compute_spiral(size: int) -> dict` function (not inside the route handler) so `main.py` can call it directly during pre-warm. Use `backend/cache.py` for get/set.
+
 ---
 
 ## 3. Frontend Implementation

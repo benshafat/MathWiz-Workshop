@@ -102,8 +102,11 @@ This runs in O(N log log N) time and O(N) space — essentially the same complex
 
 - The sieve over 10,000 integers runs in well under 10 ms in Python with NumPy.
 - Memory footprint: ~80 KB for a 10,000-element int64 array.
-- No caching is needed at this scale; compute fresh on every request.
 - For a `limit` of 100,000 the sieve still completes in under 100 ms. Cap `limit` at 100,000 to prevent obviously unreasonable requests.
+
+### Caching
+
+Cache key: `totient:{limit}`. The limit slider fires many requests at round values (100, 200, ..., 10 000) and users often revisit the same limits. Cache each computed response via `backend/cache.py` so repeated slider positions are served instantly.
 
 ### Input validation
 

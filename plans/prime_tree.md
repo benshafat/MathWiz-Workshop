@@ -104,6 +104,10 @@ Each node carries:
 | `n = 2` | Valid. n−1 = 1 triggers the edge case above — reject the whole request. Minimum valid n is **3** so that n−1 ≥ 2. |
 | `n` is prime | Valid. Returns a single-node tree (root is prime leaf, no children). |
 | Large n (e.g., 10¹²) | SymPy's `factorint` handles this quickly for numbers with small factors. For numbers with very large prime factors (e.g., a semiprime near 10¹⁵), factorization can be slow. Cap input at **n ≤ 10¹²** and return HTTP 422 for larger values. This prevents hangs without meaningfully limiting the visualization. |
+
+#### Caching
+
+Cache key: `prime_tree:{n}`. SymPy's `factorint` can be slow for large semiprimes; users navigating through adjacent integers (n, n+1, n+2, ...) will naturally re-request the same triplets. Cache each response via `backend/cache.py`.
 | n−1 or n+1 is 1 | Cannot happen for n ≥ 3 (n−1 ≥ 2, n+1 ≥ 4). Already handled by the minimum n = 3 rule. |
 
 #### Full Router Skeleton
