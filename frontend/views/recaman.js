@@ -1,17 +1,70 @@
 window.Views = window.Views || {};
 
+// Module-level audio state
+var _audioCtx = null;
+
+function stopAudio() {
+  if (_audioCtx) {
+    _audioCtx.close();
+    _audioCtx = null;
+  }
+}
+
+function playSequence(sequence, bpm) {
+  stopAudio();
+  _audioCtx = new AudioContext();
+  var ctx = _audioCtx;
+  var noteDuration = 60 / bpm; // seconds per note
+
+  var gainMaster = ctx.createGain();
+  gainMaster.gain.value = 0.15; // quiet master volume
+  gainMaster.connect(ctx.destination);
+
+  sequence.forEach(function(val, i) {
+    var semitone = val % 24; // 2 chromatic octaves from C4
+    var freq = 261.63 * Math.pow(2, semitone / 12);
+    var t0 = ctx.currentTime + i * noteDuration;
+    var t1 = t0 + noteDuration * 0.85; // slight gap between notes
+
+    var osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+
+    // Per-note gain envelope (click-free attack/release)
+    var env = ctx.createGain();
+    env.gain.setValueAtTime(0, t0);
+    env.gain.linearRampToValueAtTime(1, t0 + 0.01);  // 10ms attack
+    env.gain.setValueAtTime(1, t1 - 0.02);
+    env.gain.linearRampToValueAtTime(0, t1);          // 20ms release
+
+    osc.connect(env);
+    env.connect(gainMaster);
+    osc.start(t0);
+    osc.stop(t1);
+  });
+}
+
 window.Views.recaman = {
   _debounceTimer: null,
 
   async mount(container) {
+    var lastData = null;
+
     const controls = document.createElement('div');
     controls.className = 'controls';
     controls.innerHTML = `
       <label>
         Terms:
-        <input type="range" id="rec-terms-slider" min="10" max="300" step="10" value="100" style="width:200px" />
+        <input type="range" id="rec-terms-slider" min="10" max="300" step="10" value="100" style="width:160px" />
         <span id="rec-terms-display">100</span>
       </label>
+      <label>
+        BPM:
+        <input type="range" id="rec-bpm-slider" min="60" max="240" step="10" value="120" style="width:120px" />
+        <span id="rec-bpm-display">120</span>
+      </label>
+      <button id="rec-play-btn">&#9654; Play</button>
+      <button id="rec-stop-btn" disabled>&#9632; Stop</button>
     `;
     container.appendChild(controls);
 
@@ -19,16 +72,27 @@ window.Views.recaman = {
     chartDiv.id = 'rec-chart';
     container.appendChild(chartDiv);
 
-    const slider  = controls.querySelector('#rec-terms-slider');
-    const display = controls.querySelector('#rec-terms-display');
-    const self    = this;
+    const slider    = controls.querySelector('#rec-terms-slider');
+    const display   = controls.querySelector('#rec-terms-display');
+    const bpmSlider = controls.querySelector('#rec-bpm-slider');
+    const bpmDisplay = controls.querySelector('#rec-bpm-display');
+    const playBtn   = controls.querySelector('#rec-play-btn');
+    const stopBtn   = controls.querySelector('#rec-stop-btn');
+    const self      = this;
+
+    bpmSlider.addEventListener('input', function() {
+      bpmDisplay.textContent = bpmSlider.value;
+    });
 
     slider.addEventListener('input', function() {
       display.textContent = slider.value;
       clearTimeout(self._debounceTimer);
       self._debounceTimer = setTimeout(async function() {
+        stopAudio();
+        stopBtn.disabled = true;
         try {
           const data = await window.API.fetchRecaman(parseInt(slider.value, 10));
+          lastData = data;
           window.Views.recaman.render(data, chartDiv);
         } catch (err) {
           chartDiv.textContent = 'Error: ' + (err.message || err);
@@ -36,12 +100,26 @@ window.Views.recaman = {
       }, 250);
     });
 
+    playBtn.addEventListener('click', function() {
+      if (!lastData) return;
+      playSequence(lastData.sequence, parseInt(bpmSlider.value, 10));
+      stopBtn.disabled = false;
+    });
+
+    stopBtn.addEventListener('click', function() {
+      stopAudio();
+      stopBtn.disabled = true;
+    });
+
     // Initial fetch
     const data = await window.API.fetchRecaman(100);
+    lastData = data;
     window.Views.recaman.render(data, chartDiv);
   },
 
   render(data, container) {
+    stopAudio(); // stop any playing audio when re-rendering
+
     container.innerHTML = '';
 
     // Expected: { arcs: [{from, to, direction, step}], max_value, sequence }
