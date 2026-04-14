@@ -43,7 +43,7 @@ Each endpoint returns pure JSON data — no server-side image rendering. The fro
 |---|---|---|
 | `GET /api/prime-tree/{n}` | `n`: integer | Recursive factorization tree for n, n-1, n+1 as nested JSON nodes |
 | `GET /api/ulam-spiral` | `size`: grid half-width; backend caps total points at 250 000 (≈ 500×500) | List of `{x, y, value, is_prime}` objects |
-| `GET /api/collatz/{n}` | `n`: starting integer; `k`: number of starting values for multi-path mode; `even_angle`, `odd_angle`: turn angles in degrees for the organic-plant layout | Per-path sequences + convergence nodes |
+| `GET /api/collatz/{n}` | `n`: starting integer; `k`: number of starting values for multi-path mode | Per-path sequences + convergence nodes; each step labelled `"even"` or `"odd"` — `even_angle`/`odd_angle` are frontend-only so sliders redraw instantly without a round-trip |
 | `GET /api/totient` | `limit`: upper bound (default 10 000) | List of `{n, phi}` pairs |
 | `GET /api/continued-fraction` | `number`: key from a preset list of ~10 interesting constants (π, e, √2, φ, etc.); `depth`: number of terms | Coefficients + convergents as `{p, q, decimal_approx}` |
 | `GET /api/recaman` | `terms`: how many terms to generate | Ordered list of values |
