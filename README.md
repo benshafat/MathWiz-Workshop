@@ -27,7 +27,7 @@ You need two terminals running simultaneously.
 **Terminal 1 — API server:**
 ```bash
 cd backend
-uv run uvicorn main:app --reload --port 8000
+uv run uvicorn main:app --reload --port 8001
 ```
 
 **Terminal 2 — Frontend:**

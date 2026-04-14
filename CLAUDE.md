@@ -19,7 +19,7 @@ All backend commands run from `backend/`:
 ```bash
 cd backend
 uv sync                                      # Install / sync dependencies
-uv run uvicorn main:app --reload --port 8000 # Start dev server
+uv run uvicorn main:app --reload --port 8001 # Start dev server
 uv run pytest                                # Run tests (once written)
 uv run pytest tests/test_foo.py::test_bar -v # Run a single test
 uv run ruff check .                          # Lint
@@ -64,7 +64,7 @@ Cache keys: `prime_tree:{n}`, `ulam:{size}`, `collatz:{n}:{k}:{mode}:{depth}`, `
 
 `frontend/index.html` — shell page with nav bar (7 buttons) and `#viz-container`. Loads D3, `api.js`, all 7 view scripts, then an inline main script that wires buttons to views.
 
-`frontend/api.js` — sets `window.API` with typed async fetch wrappers for all 7 endpoints. Base URL: `http://localhost:8000`.
+`frontend/api.js` — sets `window.API` with typed async fetch wrappers for all 7 endpoints. Base URL: `http://localhost:8001`.
 
 `frontend/views/*.js` — each file sets `window.Views.{name} = { mount(container), render(data, container) }`. The `mount()` function is async: it builds the controls UI, fetches initial data, and calls `render()`. The `render()` function just draws. `main.js` calls `Views[name].mount(container)` when a nav button is clicked.
 
