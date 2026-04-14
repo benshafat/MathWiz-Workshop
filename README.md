@@ -1,5 +1,4 @@
-<img width="2564" height="1632" alt="mathwiz_image" src="https://github.com/user-attachments/assets/f85c5911-144d-4025-a399-edceacc34d56" />
-
+<img src="https://github.com/user-attachments/assets/2eff0e7f-49db-45d8-9f7a-f52789303722" width="400" />
 # MathWiz-Workshop
 MathWiz Workshop Demo
 
