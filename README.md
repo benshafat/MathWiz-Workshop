@@ -1,4 +1,5 @@
-![Uploading Gemini_Generated_Image_4sfi224sfi224sfi.png…]()
+<img width="2564" height="1632" alt="mathwiz_image" src="https://github.com/user-attachments/assets/f85c5911-144d-4025-a399-edceacc34d56" />
+
 # MathWiz-Workshop
 MathWiz Workshop Demo
 
