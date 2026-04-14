@@ -4,53 +4,84 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MathWiz-Workshop is a demo project for showing how LLM-assisted coding works. It builds an interactive web application for exploring number theory concepts through rich visualizations. The repo is currently in the planning phase — `plans/` contains specs but no application code exists yet.
+MathWiz-Workshop is a demo project for showing how LLM-assisted coding works. It builds an interactive web application for exploring number theory concepts through rich visualizations. The application is fully implemented — `plans/` contains the per-visualization specs and open questions; `backend/` and `frontend/` contain the running code.
 
-## Planned Tech Stack
+## Tech Stack
 
-- **Backend**: Python with FastAPI
-- **Frontend**: HTML / JavaScript / TypeScript
-- **Package manager**: `uv` (not pip, poetry, or pdm)
-- **Linting/formatting**: `ruff`
-- **Testing**: `pytest`
+- **Backend**: Python 3.11+, FastAPI, SymPy, NumPy. Package manager: `uv`.
+- **Frontend**: Plain HTML + JavaScript. D3.js v7 via CDN. No TypeScript, no build step.
+- **Cache**: `backend/cache.py` — in-memory SQLite3 key-value store (stdlib, no extra dependency).
 
-## Commands (once the project is scaffolded)
+## Commands
+
+All backend commands run from `backend/`:
 
 ```bash
-uv sync                          # Install dependencies
-uv run uvicorn main:app --reload # Start the FastAPI dev server
-uv run pytest                    # Run all tests
-uv run pytest tests/test_foo.py::test_bar -v  # Run a single test
-uv run ruff check .              # Lint
-uv run ruff format .             # Format
+cd backend
+uv sync                                      # Install / sync dependencies
+uv run uvicorn main:app --reload --port 8000 # Start dev server
+uv run pytest                                # Run tests (once written)
+uv run pytest tests/test_foo.py::test_bar -v # Run a single test
+uv run ruff check .                          # Lint
+uv run ruff format .                         # Format
 ```
+
+Frontend has no build step — serve with Python's built-in server:
+
+```bash
+cd frontend
+python -m http.server 5173
+```
+
+Then open `http://localhost:5173`.
 
 ## Architecture
 
-The app has two parts:
+### Backend
 
-**Backend** — A FastAPI service that exposes endpoints for computing and returning data for each math visualization. Each visualization concept gets its own module/route. The backend is internal-use only, so simplicity and nice output matter more than scalability.
+`backend/main.py` — FastAPI app. Registers all 7 routers, enables fully open CORS (`allow_origins=["*"]` — intentional, local-only workshop), and runs a startup pre-warm that populates the cache for Ulam spiral tiers and all continued fraction presets.
 
-**Frontend** — A simple HTML/JS/TS page with a button-per-visualization menu. Selecting a concept sends a request to the backend and renders the result using a suitable visualization library (TBD in `plans/infra_plans.md`).
+`backend/cache.py` — module-level in-memory SQLite3 singleton. All routers import it with `import cache` and follow this pattern:
 
-## Math Visualizations
+```python
+def get_endpoint(params):
+    key = f"prefix:{params}"
+    data = cache.get(key)
+    if data is not None:
+        return data
+    data = _compute(params)
+    cache.set(key, data)
+    return data
+```
 
-Seven concepts are fully specced in `plans/fun_math.md`:
+Cache keys: `prime_tree:{n}`, `ulam:{size}`, `collatz:{n}:{k}:{mode}:{depth}`, `totient:{limit}`, `cf:{number}:{depth}`, `recaman:{terms}`, `modular:{n}:{m}`.
 
-1. **Prime Factorization Trees** — branching tree for a number and its ±1 neighbors
-2. **Ulam Spiral** — integers on a clockwise grid, primes highlighted, diagonal patterns; click a prime to trace its diagonal
-3. **Collatz Conjecture** — forward trajectories converging on the same nodes, or a reverse Collatz tree rendered as an organic plant/coral shape with angle sliders
-4. **Totient Function Graph (Euler's φ)** — scatter plot of φ(n) for 1–10,000 with hover tooltips
-5. **Continued Fraction Expansions** — convergents of π, √2, golden ratio on a number line or Stern-Brocot tree
-6. **Recamán's Sequence** — arc diagram of the OEIS sequence
-7. **Modular Arithmetic Webs** — circle diagrams of `k → (k×m) mod n` with sliders for `m` and `n`
+`backend/routers/` — one file per visualization. Each exports a `router = APIRouter(prefix="/api")`. Two routers also export top-level compute functions for the startup pre-warm:
+- `ulam_spiral.compute_spiral(size)` 
+- `cont_fraction.compute_cf(number_key, depth)` and `cont_fraction.PRESETS`
+
+### Frontend
+
+`frontend/index.html` — shell page with nav bar (7 buttons) and `#viz-container`. Loads D3, `api.js`, all 7 view scripts, then an inline main script that wires buttons to views.
+
+`frontend/api.js` — sets `window.API` with typed async fetch wrappers for all 7 endpoints. Base URL: `http://localhost:8000`.
+
+`frontend/views/*.js` — each file sets `window.Views.{name} = { mount(container), render(data, container) }`. The `mount()` function is async: it builds the controls UI, fetches initial data, and calls `render()`. The `render()` function just draws. `main.js` calls `Views[name].mount(container)` when a nav button is clicked.
+
+### Key implementation decisions
+
+- **No TypeScript, no build step.** If a view is getting too complex for plain JS, simplify the spec rather than adding build tooling.
+- **Global namespace.** Views attach to `window.Views`, the API to `window.API`. No ES modules (avoids `type="module"` complications in the workshop).
+- **Collatz angles are frontend-only.** The backend returns `"even"`/`"odd"` step labels; `even_angle`/`odd_angle` are applied in the browser so the plant-layout slider redraws without a round-trip.
+- **Modular web slider.** The `m` slider calls `computeLines(n, m)` in JS and re-renders without an API call. The API is only hit when `n` changes.
+- **Ulam spiral.** Canvas-based (not SVG) for performance. Uses progressive tier loading: size 10 → 50 → 150 → 249. All 4 tiers are pre-warmed on startup.
+- **Continued fractions.** `p` and `q` are returned as strings to avoid JS safe-integer overflow for deep convergents.
+- **Input validation** is crash-prevention only — reject obviously bad values with HTTP 422; do not add defensive hardening.
 
 ## Planning Documents
 
 | File | Contents |
 |------|----------|
-| `plans/fun_math.md` | Detailed specs for each of the 7 visualizations |
-| `plans/helpful_prompts.md` | Prompts for driving the infrastructure and per-concept planning steps |
-| `plans/infra_plans.md` | Infrastructure blueprint (currently a placeholder — fill this out before implementing) |
-
-Per-concept implementation plan files should be created in `plans/` (one `.md` per visualization), referencing the packages chosen in `infra_plans.md` and noting any open questions that must be resolved before coding begins.
+| `plans/fun_math.md` | Original specs for all 7 visualizations |
+| `plans/infra_plans.md` | Infrastructure decisions and Q&A |
+| `plans/prime_tree.md` … `plans/modular_web.md` | Per-visualization implementation plans with open questions |
