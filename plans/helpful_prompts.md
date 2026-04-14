@@ -15,6 +15,7 @@ In `infra_plans.md`, please lay out your plan for the infrastructure we need to 
 - We will be using python for backend, html/js/ts for the frontend. I think FastAPI is a good API package. 
 - Let's use uv for package management. 
 - We want to keep it simple - this is for internal use at the moment, not for production-grade. So you can use packages that give nice results even if they are not recommended for high scale/load.
+- All code runs locally for the workshop. Do not add any authentication, authorization, HTTPS, or other security hardening. This also means CORS can be fully open (`*`) and input validation only needs to be enough to prevent crashes, not to guard against malicious input.
 
 
 ## Math Examples - Expansion
